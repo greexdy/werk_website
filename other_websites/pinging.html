@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MultiPing Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .status {
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      color: white;
+      font-weight: bold;
+    }
+    .ok { background-color: green; }
+    .warn { background-color: orange; }
+    .error { background-color: red; }
+    .btn-primary {
+      background-color: #b81652;
+    }
+    .btn-primary:hover {
+      background-color: #a01348;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+
+  <!-- Navbar -->
+  <nav class="bg-[#b81652] text-white px-6 py-4 flex items-center justify-between rounded-lg shadow-md">
+    <img src="https://www.rts.be/themes/creatheme/logo-white.svg" width="15%">
+    <div class="space-x-4">
+      <a href="index.html" class="hover:underline">Multiping & open</a>
+      <a href="card.html" class="hover:underline">Note</a>
+      <a href="login.html" class="hover:underline">Pass</a>
+      <a href="edgecore.html" class="hover:underline">Switch</a>
+    </div>
+  </nav>
+
+    <h1 class="text-2xl font-bold text-center">Multiping</h1>
+
+    <div class="space-y-4" id="form-container">
+      <div>
+        <label class="font-medium">Modus:</label>
+        <select id="mode" class="p-2 rounded border w-full">
+          <option value="range">IP Range</option>
+          <option value="list">Lijst van IP's</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="font-medium">Protocol:</label>
+        <select id="protocol" class="p-2 rounded border w-full">
+          <option value="http">http</option>
+          <option value="https">https</option>
+        </select>
+      </div>
+
+      <div id="range-inputs" class="space-y-2">
+        <input id="start-ip" type="text" placeholder="Start IP (bv. 10.10.10.1)" class="p-2 border rounded w-full">
+        <input id="range-count" type="number" placeholder="Aantal apparaten" class="p-2 border rounded w-full">
+      </div>
+
+      <div id="list-inputs" class="space-y-2 hidden">
+        <input id="list-count" type="number" placeholder="Aantal IP's" class="p-2 border rounded w-full" onchange="generateIPInputs()">
+        <div id="ip-list" class="space-y-2"></div>
+      </div>
+
+      <input id="ping-delay" type="number" value="1000" class="p-2 border rounded w-full" placeholder="Delay tussen pings (ms)" />
+
+      <div class="flex gap-4">
+        <button id="start-btn" onclick="startPinging()" class="btn-primary text-white font-bold py-2 px-4 rounded">
+          Start Pingen
+        </button>
+
+        <button id="stop-btn" onclick="stopPinging()" class="hidden btn-primary text-white font-bold py-2 px-4 rounded">
+          Stop Pingen
+        </button>
+
+        <button onclick="openTabs()" class="btn-primary text-white font-bold py-2 px-4 rounded">
+          IP's openen
+        </button>
+      </div>
+    </div>
+
+    <div id="results" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </div>
+
+  <script>
+    const modeSelector = document.getElementById('mode');
+    const rangeInputs = document.getElementById('range-inputs');
+    const listInputs = document.getElementById('list-inputs');
+    const ipList = document.getElementById('ip-list');
+    const delayInput = document.getElementById('ping-delay');
+    const protocolSelector = document.getElementById('protocol');
+    const results = document.getElementById('results');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+
+    let stop = false;
+    let delay = 1000;
+
+    modeSelector.addEventListener('change', () => {
+      const mode = modeSelector.value;
+      rangeInputs.classList.toggle('hidden', mode !== 'range');
+      listInputs.classList.toggle('hidden', mode !== 'list');
+    });
+
+    function generateIPInputs() {
+      ipList.innerHTML = '';
+      const count = parseInt(document.getElementById('list-count').value);
+      for (let i = 0; i < count; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `IP ${i + 1}`;
+        input.className = 'p-2 border rounded w-full';
+        ipList.appendChild(input);
+      }
+    }
+
+    function ipToParts(ip) {
+      return ip.split('.').map(Number);
+    }
+
+    function partsToIp(parts) {
+      return parts.join('.');
+    }
+
+    function getRangeIPs(startIP, count) {
+      let parts = ipToParts(startIP);
+      const ips = [];
+      for (let i = 0; i < count; i++) {
+        const ip = [...parts];
+        ip[3] += i;
+        for (let j = 3; j > 0; j--) {
+          if (ip[j] > 255) {
+            ip[j] -= 256;
+            ip[j - 1]++;
+          }
+        }
+        ips.push(partsToIp(ip));
+      }
+      return ips;
+    }
+
+    async function pingAll(ips) {
+      const res = await fetch('/api/ping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ips })
+      });
+      return await res.json();
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function repeatPing(ip) {
+          const div = document.getElementById(`status-${ip}`);
+      while (!stop) {
+        div.className = 'status bg-gray-400';
+        div.textContent = `${ip}: testen...`;
+
+        try {
+          const response = await pingAll([ip]);
+          const { status } = response[0];
+
+          div.className = `status ${status}`;
+          const statusText = status === 'ok' ? 'Online' : status === 'warn' ? 'Geen antwoord' : 'Fout';
+          const now = new Date().toLocaleTimeString();
+          div.textContent = `${ip}: ${statusText} – laatste ping: ${now}`;
+        } catch (e) {
+          div.className = 'status error';
+          div.textContent = `${ip}: Fout bij verbinden – ${new Date().toLocaleTimeString()}`;
+        }
+
+        await sleep(delay);
+      }
+    }
+
+    async function startPinging() {
+      stop = false;
+      delay = parseInt(delayInput.value) || 1000;
+
+      startBtn.classList.add('hidden');
+      stopBtn.classList.remove('hidden');
+      modeSelector.disabled = true;
+
+      let ips = [];
+      const mode = modeSelector.value;
+
+      if (mode === 'range') {
+        const start = document.getElementById('start-ip').value;
+        const count = parseInt(document.getElementById('range-count').value);
+        ips = getRangeIPs(start, count);
+      } else {
+        const inputs = ipList.querySelectorAll('input');
+        inputs.forEach(input => {
+          if (input.value.trim()) ips.push(input.value.trim());
+        });
+      }
+
+      results.innerHTML = '';
+      ips.forEach(ip => {
+        const div = document.createElement('div');
+        div.id = `status-${ip}`;
+        div.textContent = `${ip}: starten...`;
+        div.className = 'status bg-gray-400';
+        results.appendChild(div);
+      });
+
+      ips.forEach(ip => repeatPing(ip));
+    }
+
+    function stopPinging() {
+      stop = true;
+      stopBtn.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+      modeSelector.disabled = false;
+      results.innerHTML = '';
+    }
+
+    function openTabs() {
+  const protocol = document.getElementById('protocol').value;
+  const mode = modeSelector.value;
+  let ips = [];
+
+  if (mode === 'range') {
+    const start = document.getElementById('start-ip').value;
+    const count = parseInt(document.getElementById('range-count').value);
+    ips = getRangeIPs(start, count);
+  } else {
+    const inputs = ipList.querySelectorAll('input');
+    inputs.forEach(input => {
+      if (input.value.trim()) ips.push(input.value.trim());
+    });
+  }
+
+  // Open tabs in omgekeerde volgorde zodat de eerste IP als laatste wordt geopend (en dus als eerste tab komt)
+  for (let i = ips.length - 1; i >= 0; i--) {
+    const ip = ips[i];
+const url = `open.html?ip=${ip}&proto=${protocol}`;
+window.open(url, '_blank');
+  }
+}
+
+  </script>
+</body>
+</html>

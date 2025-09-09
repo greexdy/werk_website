@@ -268,7 +268,10 @@ ip ssh crypto host-key generate
 ip ssh save host-key
 configure
 ${ntp ? "ntp server " + ntp : ""}
-exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start`;
+exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start
+
+
+`;
         return script;
     }
 

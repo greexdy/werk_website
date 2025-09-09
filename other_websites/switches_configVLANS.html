@@ -78,6 +78,13 @@
         <div>
             <input id="vlanPorts" type="text" placeholder="Poorten op deze VLAN (bv. 1,2,3)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
         </div>
+        <!-- Tagged/Untagged ports for Single Switch Config -->
+        <div>
+            <input id="vlanTaggedPorts" type="text" placeholder="Getagde poorten (bv. 1,2,3)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <div>
+            <input id="vlanUntaggedPorts" type="text" placeholder="Untagged poorten (bv. 4,5,6)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
         <button onclick="generateSingle()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Script</button>
         <div id="singleResult" class="hidden mt-4">
             <textarea id="singleScript" class="w-full h-64 p-3 border rounded font-mono text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
@@ -124,6 +131,13 @@
         </div>
         <div>
             <input id="vlanPortsMulti" type="text" placeholder="Poorten op deze VLAN (bv. 1,2,3)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <!-- Tagged/Untagged ports for Multi Switch Config -->
+        <div>
+            <input id="vlanTaggedPortsMulti" type="text" placeholder="Getagde poorten (bv. 1,2,3)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <div>
+            <input id="vlanUntaggedPortsMulti" type="text" placeholder="Untagged poorten (bv. 4,5,6)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
         </div>
         <button onclick="generateMulti()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Scripts</button>
         <div id="multiResult" class="hidden mt-4 space-y-4"></div>
@@ -237,14 +251,29 @@
         }
     }
 
-    function generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts) {
+    function generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts, vlanTaggedPorts, vlanUntaggedPorts) {
         let vlanConfig = "";
         if (vlan) {
             vlanConfig = `\nvlan database\nvlan ${vlan}${vlanName ? ' name ' + vlanName : ''}\nexit\n\ninterface vlan ${vlan}\nip address ${ip} ${subnet} default-gateway ${gateway}\nexit\n`;
+            // Assign access ports
             if (vlanPorts) {
                 const ports = vlanPorts.split(',').map(p => p.trim()).filter(Boolean);
                 ports.forEach(port => {
                     vlanConfig += `interface ethernet 1/${port}\nswitchport access vlan ${vlan}\nexit\n`;
+                });
+            }
+            // Assign tagged ports
+            if (vlanTaggedPorts) {
+                const tagged = vlanTaggedPorts.split(',').map(p => p.trim()).filter(Boolean);
+                tagged.forEach(port => {
+                    vlanConfig += `interface ethernet 1/${port}\nswitchport general allowed vlan add ${vlan} tagged\nexit\n`;
+                });
+            }
+            // Assign untagged ports
+            if (vlanUntaggedPorts) {
+                const untagged = vlanUntaggedPorts.split(',').map(p => p.trim()).filter(Boolean);
+                untagged.forEach(port => {
+                    vlanConfig += `interface ethernet 1/${port}\nswitchport general allowed vlan add ${vlan} untagged\nswitchport pvid ${vlan}\nexit\n`;
                 });
             }
         } else {
@@ -279,7 +308,9 @@ exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start`;
         let vlan = document.getElementById("vlan").value.trim();
         let vlanName = document.getElementById("vlanName").value.trim();
         let vlanPorts = document.getElementById("vlanPorts").value.trim();
-        let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts);
+        let vlanTaggedPorts = document.getElementById("vlanTaggedPorts").value.trim();
+        let vlanUntaggedPorts = document.getElementById("vlanUntaggedPorts").value.trim();
+        let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts, vlanTaggedPorts, vlanUntaggedPorts);
         document.getElementById("singleScript").value = script;
         document.getElementById("singleResult").classList.remove("hidden");
     }
@@ -297,6 +328,8 @@ exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start`;
         let vlan = document.getElementById("vlanMulti").value.trim();
         let vlanName = document.getElementById("vlanNameMulti").value.trim();
         let vlanPorts = document.getElementById("vlanPortsMulti").value.trim();
+        let vlanTaggedPorts = document.getElementById("vlanTaggedPortsMulti").value.trim();
+        let vlanUntaggedPorts = document.getElementById("vlanUntaggedPortsMulti").value.trim();
         let count = parseInt(document.getElementById("count").value);
         let container = document.getElementById("multiResult");
         container.innerHTML = "";
@@ -306,7 +339,7 @@ exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start`;
             ipParts[3] = parseInt(ipParts[3]) + i;
             let ip = ipParts.join(".");
             let hostname = generateHostname(startHostname, i);
-            let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts);
+            let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts, vlanTaggedPorts, vlanUntaggedPorts);
             let block = document.createElement("div");
             block.className = "p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 transition-colors duration-200";
             block.innerHTML = `

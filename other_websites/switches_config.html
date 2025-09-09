@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="nl" class="dark">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Switch Config Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        /* Force dark mode immediately */
+        html, body {
+            background-color: #111827 !important;
+            color: #f9fafb !important;
+        }
+    </style>
+    <script>
+        // Set dark mode immediately before page renders
+        document.documentElement.classList.add('dark');
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+
+    <!-- Navbar -->
+    <nav class="bg-[#b81652] text-white px-6 py-4 flex items-center justify-between rounded-lg shadow-md">
+        <img src="https://www.rts.be/themes/creatheme/logo-white.svg" width="15%">
+        <div class="flex items-center space-x-4">
+            <a href="edgecore.html" class="hover:underline">Switch</a>
+            <!-- Dark mode toggle -->
+            <button onclick="toggleDarkMode()" class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-2 transition-colors duration-200" title="Dark mode toggle">
+                <svg id="sun-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                </svg>
+                <svg id="moon-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Single Switch Config -->
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-4 transition-colors duration-200">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Single Switch Config</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <input id="ip" type="text" placeholder="IP adres" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="ip-error" class="text-red-500 text-sm mt-1 hidden">IP adres is verplicht</div>
+            </div>
+            <div>
+                <input id="subnet" type="text" placeholder="Subnet mask" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="subnet-error" class="text-red-500 text-sm mt-1 hidden">Subnet mask is verplicht</div>
+            </div>
+            <div>
+                <input id="gateway" type="text" placeholder="Default Gateway" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="gateway-error" class="text-red-500 text-sm mt-1 hidden">Default Gateway is verplicht</div>
+            </div>
+            <div>
+                <input id="hostname" type="text" placeholder="Hostname" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="hostname-error" class="text-red-500 text-sm mt-1 hidden">Hostname is verplicht</div>
+            </div>
+            <div>
+                <input id="password" type="text" placeholder="Admin wachtwoord" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="password-error" class="text-red-500 text-sm mt-1 hidden">Admin wachtwoord is verplicht</div>
+            </div>
+            <input id="ntp" type="text" placeholder="NTP server (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <button onclick="generateSingle()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Script</button>
+        <div id="singleResult" class="hidden mt-4">
+            <textarea id="singleScript" class="w-full h-64 p-3 border rounded font-mono text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+            <button onclick="copyToClipboard('singleScript')" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-colors duration-200">Kopieer</button>
+        </div>
+    </div>
+
+    <!-- Multi Switch Config -->
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-4 transition-colors duration-200">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Multi Switch Config</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <input id="startIp" type="text" placeholder="Start IP adres" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="startIp-error" class="text-red-500 text-sm mt-1 hidden">Start IP adres is verplicht</div>
+            </div>
+            <div>
+                <input id="subnetMulti" type="text" placeholder="Subnet mask" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="subnetMulti-error" class="text-red-500 text-sm mt-1 hidden">Subnet mask is verplicht</div>
+            </div>
+            <div>
+                <input id="gatewayMulti" type="text" placeholder="Default Gateway" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="gatewayMulti-error" class="text-red-500 text-sm mt-1 hidden">Default Gateway is verplicht</div>
+            </div>
+            <div>
+                <input id="startHostname" type="text" placeholder="Start Hostname" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="startHostname-error" class="text-red-500 text-sm mt-1 hidden">Start Hostname is verplicht</div>
+            </div>
+            <div>
+                <input id="passwordMulti" type="text" placeholder="Admin wachtwoord" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="passwordMulti-error" class="text-red-500 text-sm mt-1 hidden">Admin wachtwoord is verplicht</div>
+            </div>
+            <input id="ntpMulti" type="text" placeholder="NTP server (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+            <div>
+                <input id="count" type="number" placeholder="Aantal switches" min="1" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
+                <div id="count-error" class="text-red-500 text-sm mt-1 hidden">Aantal switches is verplicht</div>
+            </div>
+        </div>
+        <button onclick="generateMulti()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Scripts</button>
+        <div id="multiResult" class="hidden mt-4 space-y-4"></div>
+    </div>
+
+</div>
+
+<script>
+    // Dark mode functionality - Force dark mode by default
+    function initDarkMode() {
+        const darkModeCookie = getCookie('darkMode');
+
+        // Only go to light mode if explicitly set to false
+        if (darkModeCookie === 'false') {
+            document.documentElement.classList.remove('dark');
+            updateDarkModeIcon(false);
+        } else {
+            // Default to dark mode and set cookie
+            document.documentElement.classList.add('dark');
+            updateDarkModeIcon(true);
+            setCookie('darkMode', 'true', 365);
+        }
+    }
+
+    function toggleDarkMode() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        setCookie('darkMode', isDark.toString(), 365);
+        updateDarkModeIcon(isDark);
+    }
+
+    function updateDarkModeIcon(isDark) {
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        if (isDark) {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        } else {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        }
+    }
+
+    // Cookie functions
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    // Validation functions
+    function validateField(fieldId, errorId, fieldName) {
+        const field = document.getElementById(fieldId);
+        const error = document.getElementById(errorId);
+        const value = field.value.trim();
+
+        if (!value) {
+            error.classList.remove('hidden');
+            field.classList.add('border-red-500');
+            return false;
+        } else {
+            error.classList.add('hidden');
+            field.classList.remove('border-red-500');
+            return true;
+        }
+    }
+
+    function validateSingleForm() {
+        let isValid = true;
+        isValid &= validateField('ip', 'ip-error', 'IP adres');
+        isValid &= validateField('subnet', 'subnet-error', 'Subnet mask');
+        isValid &= validateField('gateway', 'gateway-error', 'Default Gateway');
+        isValid &= validateField('hostname', 'hostname-error', 'Hostname');
+        isValid &= validateField('password', 'password-error', 'Admin wachtwoord');
+        return isValid;
+    }
+
+    function validateMultiForm() {
+        let isValid = true;
+        isValid &= validateField('startIp', 'startIp-error', 'Start IP adres');
+        isValid &= validateField('subnetMulti', 'subnetMulti-error', 'Subnet mask');
+        isValid &= validateField('gatewayMulti', 'gatewayMulti-error', 'Default Gateway');
+        isValid &= validateField('startHostname', 'startHostname-error', 'Start Hostname');
+        isValid &= validateField('passwordMulti', 'passwordMulti-error', 'Admin wachtwoord');
+        isValid &= validateField('count', 'count-error', 'Aantal switches');
+        return isValid;
+    }
+
+    // Improved hostname numbering
+    function generateHostname(baseHostname, index) {
+        // Check if hostname already ends with numbers
+        const match = baseHostname.match(/^(.+?)(\d+)$/);
+        if (match) {
+            // If it ends with numbers, increment them
+            const base = match[1];
+            const startNum = parseInt(match[2]);
+            return base + String(startNum + index).padStart(match[2].length, '0');
+        } else {
+            // If no numbers at the end, append with proper padding
+            return baseHostname + String(index + 1).padStart(2, '0');
+        }
+    }
+
+    function generateScript(ip, subnet, gateway, hostname, password, ntp) {
+        let script = `configure
+
+interface vlan 1
+ip address ${ip} ${subnet} default-gateway ${gateway}
+exit
+
+hostname ${hostname}
+snmp-server contact RTS bvba
+username admin password 0 ${password}
+clock timezone-predefined GMT+0100-Brussels,Copenhagen,Madrid,Paris
+clock summer-time zomertijd predefined europe
+ip ssh server
+exit
+ip ssh crypto host-key generate
+ip ssh save host-key
+configure
+${ntp ? "ntp server " + ntp : ""}
+exit
+
+show version
+show ntp
+show ip ssh
+show system
+copy run start`;
+        return script;
+    }
+
+    function generateSingle() {
+        if (!validateSingleForm()) {
+            return;
+        }
+
+        let ip = document.getElementById("ip").value.trim();
+        let subnet = document.getElementById("subnet").value.trim();
+        let gateway = document.getElementById("gateway").value.trim();
+        let hostname = document.getElementById("hostname").value.trim();
+        let password = document.getElementById("password").value.trim();
+        let ntp = document.getElementById("ntp").value.trim();
+
+        let script = generateScript(ip, subnet, gateway, hostname, password, ntp);
+        document.getElementById("singleScript").value = script;
+        document.getElementById("singleResult").classList.remove("hidden");
+    }
+
+    function generateMulti() {
+        if (!validateMultiForm()) {
+            return;
+        }
+
+        let startIp = document.getElementById("startIp").value.trim().split(".");
+        let subnet = document.getElementById("subnetMulti").value.trim();
+        let gateway = document.getElementById("gatewayMulti").value.trim();
+        let startHostname = document.getElementById("startHostname").value.trim();
+        let password = document.getElementById("passwordMulti").value.trim();
+        let ntp = document.getElementById("ntpMulti").value.trim();
+        let count = parseInt(document.getElementById("count").value);
+
+        let container = document.getElementById("multiResult");
+        container.innerHTML = "";
+        container.classList.remove("hidden");
+
+        for (let i = 0; i < count; i++) {
+            let ipParts = [...startIp];
+            ipParts[3] = parseInt(ipParts[3]) + i;
+            let ip = ipParts.join(".");
+            let hostname = generateHostname(startHostname, i);
+
+            let script = generateScript(ip, subnet, gateway, hostname, password, ntp);
+
+            let block = document.createElement("div");
+            block.className = "p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 transition-colors duration-200";
+            block.innerHTML = `
+                <h3 class="font-bold mb-2 text-gray-800 dark:text-gray-200">Device ${i+1} - ${hostname} (${ip})</h3>
+                <textarea id="multiScript${i}" class="w-full h-48 p-2 border rounded font-mono text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white" readonly>${script}</textarea>
+                <button onclick="copyToClipboard('multiScript${i}')" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-colors duration-200">Kopieer</button>
+            `;
+            container.appendChild(block);
+        }
+    }
+
+    function copyToClipboard(id) {
+        let textarea = document.getElementById(id);
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        alert("Script gekopieerd naar klembord!");
+    }
+
+    // Initialize dark mode on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initDarkMode();
+    });
+</script>
+
+</body>
+</html>

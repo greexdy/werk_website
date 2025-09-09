@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RTS Werk Dash</title>
+
+  <!-- Optional: change or remove the font link if your environment can't fetch Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0f1720;
+      --panel:#0f1728;
+      --muted:#9aa4b2;
+      --accent:#e63946;
+      --glass: rgba(255,255,255,0.03);
+      --card-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      --radius:12px;
+      --gap:18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#08101a 0%, var(--bg) 100%);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    /* Header */
+    header.app-header{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:22px;
+    }
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .brand img{
+      height:40px;
+      width:auto;
+      display:block;
+    }
+    .brand h1{
+      font-size:18px;
+      margin:0;
+      letter-spacing:1px;
+      color:var(--accent);
+      font-weight:700;
+      text-transform:uppercase;
+    }
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    /* Search */
+    .search {
+      position:relative;
+      display:flex;
+      align-items:center;
+    }
+    .search input{
+      width:260px;
+      padding:10px 14px 10px 40px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:var(--glass);
+      color:inherit;
+      outline: none;
+      font-size:14px;
+      transition:box-shadow .18s, transform .12s;
+    }
+    .search input:focus{
+      box-shadow: 0 6px 18px rgba(14, 67, 120, 0.25);
+      transform:translateY(-1px);
+      border-color: rgba(255,255,255,0.08);
+    }
+    .search svg {
+      position:absolute;
+      left:12px;
+      width:18px;
+      height:18px;
+      opacity:0.85;
+    }
+
+    /* Layout */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap:var(--gap);
+      align-items:start;
+    }
+
+    /* Cards grid */
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap:var(--gap);
+    }
+
+    .card {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:18px;
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: var(--card-shadow);
+      text-decoration:none;
+      color:inherit;
+      transition: transform .18s ease, box-shadow .18s ease;
+      min-height:120px;
+      justify-content:center;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .card:hover, .card:focus {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 40px rgba(2,6,23,0.7);
+    }
+
+    .card img {
+      height:48px;
+      width:48px;
+      object-fit:contain;
+      display:block;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45));
+    }
+    .card .title {
+      margin:0;
+      font-size:13px;
+      font-weight:600;
+      color:#e6eef6;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+    .card .subtitle{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Right column / sections */
+    aside.panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      border-radius:var(--radius);
+      padding:16px;
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: var(--card-shadow);
+      min-height:160px;
+    }
+    aside h2{margin:6px 0 14px 0;font-size:14px}
+    .vpn-list {display:flex;flex-direction:column;gap:10px}
+    .vpn-link{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:10px;
+      border-radius:10px;
+      text-decoration:none;
+      color:inherit;
+      background:rgba(255,255,255,0.015);
+      border:1px solid rgba(255,255,255,0.02);
+      transition:transform .12s, background .12s;
+    }
+    .vpn-link img{height:40px;width:40px;object-fit:contain}
+    .vpn-link:hover{transform:translateY(-4px); background: rgba(255,255,255,0.02)}
+
+    /* Empty state */
+    .empty {
+      padding:24px;
+      border-radius:10px;
+      text-align:center;
+      color:var(--muted);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border:1px dashed rgba(255,255,255,0.02);
+    }
+
+    /* Responsive */
+    @media (max-width:900px){
+      main{grid-template-columns:1fr}
+      .search input{width:180px}
+      body{padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header" role="banner">
+    <div class="brand">
+      <!-- Replace with your vector logo -->
+      <img src="./pictures/RTS_LOGO.svg" alt="RTS Logo" onerror="this.style.display='none'">
+      <div>
+        <h1>RTS Werk Dash</h1>
+        <div style="font-size:12px;color:var(--muted)">Tools & links — snel overzicht</div>
+      </div>
+    </div>
+
+    <div class="controls" role="search">
+      <div class="search" aria-label="Zoeken in links">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        <input id="searchInput" type="search" placeholder="Zoeken..." aria-label="Zoeken" />
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left: grid -->
+    <section aria-label="Snelkoppelingen">
+      <div class="grid" id="cardsGrid">
+        <!-- Example card structure - replace image src and href as needed -->
+        <a class="card" href="./other_websites/switches_config.html" target="_blank" rel="noopener noreferrer">
+          <img src="grafana.png" alt="Switches">
+          <p class="title">handy for the configuration of switches</p>
+          <p class="subtitle">switches config</p>
+        </a>
+
+        <a class="card" href="https://www.zabbix.com" target="_blank" rel="noopener noreferrer">
+          <img src="zabbix.png" alt="Zabbix">
+          <p class="title">Zabbix</p>
+          <p class="subtitle">Monitoring</p>
+        </a>
+
+        <a class="card" href="https://www.paessler.com/prtg" target="_blank" rel="noopener noreferrer">
+          <img src="prtg.png" alt="PRTG">
+          <p class="title">PRTG</p>
+          <p class="subtitle">Sensors</p>
+        </a>
+
+        <a class="card" href="https://freshdesk.com" target="_blank" rel="noopener noreferrer">
+          <img src="freshdesk.png" alt="Freshdesk">
+          <p class="title">Freshdesk</p>
+          <p class="subtitle">Tickets</p>
+        </a>
+
+        <a class="card" href="https://radwin.com" target="_blank" rel="noopener noreferrer">
+          <img src="radwin.png" alt="Radwin">
+          <p class="title">Radwin — Band</p>
+          <p class="subtitle">Linkbeheer</p>
+        </a>
+
+        <a class="card" href="https://docmost.com" target="_blank" rel="noopener noreferrer">
+          <img src="docmost.png" alt="Docmost">
+          <p class="title">Docmost</p>
+          <p class="subtitle">Documentatie</p>
+        </a>
+
+        <a class="card" href="https://doppler.com" target="_blank" rel="noopener noreferrer">
+          <img src="doppler.png" alt="Doppler">
+          <p class="title">Doppler</p>
+          <p class="subtitle">Secrets</p>
+        </a>
+
+        <a class="card" href="https://robaws.com" target="_blank" rel="noopener noreferrer">
+          <img src="robaws.png" alt="Robaws">
+          <p class="title">Robaws</p>
+          <p class="subtitle">Automation</p>
+        </a>
+
+        <a class="card" href="https://www.motorolasolutions.com" target="_blank" rel="noopener noreferrer">
+          <img src="motorola.png" alt="Motorola Tools">
+          <p class="title">Motorola Tools</p>
+          <p class="subtitle">Support</p>
+        </a>
+
+        <a class="card" href="https://www.milestonesys.com" target="_blank" rel="noopener noreferrer">
+          <img src="milestone.png" alt="Milestone">
+          <p class="title">Milestone</p>
+          <p class="subtitle">VMS</p>
+        </a>
+
+        <a class="card" href="https://avigilon.com" target="_blank" rel="noopener noreferrer">
+          <img src="avigilon.png" alt="Avigilon">
+          <p class="title">Avigilon Cloud</p>
+          <p class="subtitle">CCTV</p>
+        </a>
+
+        <a class="card" href="https://gitea.io" target="_blank" rel="noopener noreferrer">
+          <img src="git.png" alt="Gitea">
+          <p class="title">Git Tea RTS</p>
+          <p class="subtitle">Repositories</p>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Right: panel -->
+    <aside class="panel" aria-labelledby="panelTitle">
+      <h2 id="panelTitle">VPN's & korte links</h2>
+
+      <div class="vpn-list" id="vpnList">
+        <a class="vpn-link" href="https://vpn.example.com" target="_blank" rel="noopener noreferrer">
+          <img src="gentvpn.png" alt="Gent VPN">
+          <div>
+            <div style="font-weight:600">GENT VPN</div>
+            <div style="font-size:12px;color:var(--muted)">Directe toegang</div>
+          </div>
+        </a>
+
+        <!-- Add more VPN links as needed -->
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="empty" id="searchHint">
+        Gebruik de zoekbalk bovenaan om snel te filteren op naam (bv. "zabbix", "milestone").
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // Simple client-side filter: filters cards by title/subtitle text
+    (function(){
+      const input = document.getElementById('searchInput');
+      const grid = document.getElementById('cardsGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const hint = document.getElementById('searchHint');
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+          const title = (card.querySelector('.title')?.textContent || '').toLowerCase();
+          const subtitle = (card.querySelector('.subtitle')?.textContent || '').toLowerCase();
+          const matches = q === '' || title.includes(q) || subtitle.includes(q) || card.href.toLowerCase().includes(q);
+          card.style.display = matches ? '' : 'none';
+          if(matches) visible++;
+        });
+
+        // show helpful hint if no cards match
+        hint.textContent = visible === 0 ? 'Geen resultaten gevonden. Probeer een ander zoekwoord.' : 'Gebruik de zoekbalk bovenaan om snel te filteren op naam (bv. "zabbix", "milestone").';
+      });
+
+      // Allow pressing / to focus the search quickly
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          input.focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

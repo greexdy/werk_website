@@ -190,13 +190,164 @@
       border:1px dashed rgba(255,255,255,0.02);
     }
 
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 54px;
+      height: 28px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #fff;
+      border-radius: 34px;
+      transition: background 0.3s;
+      border: 1.5px solid #bbb;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 2.5px;
+      background-color: #222;
+      border-radius: 50%;
+      transition: transform 0.3s, background 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    input:checked + .slider {
+      background-color: #222;
+      border-color: #222;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+      background: #fff;
+    }
+
     /* Responsive */
     @media (max-width:900px){
       main{grid-template-columns:1fr}
       .search input{width:180px}
       body{padding:18px}
     }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1720;
+        --panel: #0f1728;
+        --muted: #9aa4b2;
+        --accent: #e63946;
+        --glass: rgba(255, 255, 255, 0.03);
+        --card-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+      }
+      body {
+        background: linear-gradient(180deg, #08101a 0%, var(--bg) 100%);
+        color: #e6eef6;
+      }
+      .app-header {
+        background: var(--accent);
+        color: #fff;
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .vpn-link {
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+      .empty {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+        border: 1px dashed rgba(255, 255, 255, 0.02);
+      }
+    }
   </style>
+  <script>
+    // Simple client-side filter: filters cards by title/subtitle text
+    (function(){
+      const input = document.getElementById('searchInput');
+      const grid = document.getElementById('cardsGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const hint = document.getElementById('searchHint');
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+          const title = (card.querySelector('.title')?.textContent || '').toLowerCase();
+          const subtitle = (card.querySelector('.subtitle')?.textContent || '').toLowerCase();
+          const matches = q === '' || title.includes(q) || subtitle.includes(q) || card.href.toLowerCase().includes(q);
+          card.style.display = matches ? '' : 'none';
+          if(matches) visible++;
+        });
+
+        // show helpful hint if no cards match
+        hint.textContent = visible === 0 ? 'Geen resultaten gevonden. Probeer een ander zoekwoord.' : 'Gebruik de zoekbalk bovenaan om snel te filteren op naam (bv. "zabbix", "milestone").';
+      });
+
+      // Allow pressing / to focus the search quickly
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          input.focus();
+        }
+      });
+    })();
+
+    // Dark mode toggle logic
+    function setDarkMode(enabled) {
+      const toggle = document.getElementById('darkModeToggle');
+      if (enabled) {
+        document.documentElement.classList.add('dark');
+        document.body.style.background = 'linear-gradient(180deg,#08101a 0%, var(--bg) 100%)';
+        localStorage.setItem('theme', 'dark');
+        if (toggle) toggle.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.style.background = '#f3f4f6';
+        localStorage.setItem('theme', 'light');
+        if (toggle) toggle.checked = false;
+      }
+      updateTitleSubtitleColors();
+    }
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(!isDark);
+    }
+    function updateTitleSubtitleColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const titles = document.querySelectorAll('.title');
+      const subtitles = document.querySelectorAll('.subtitle');
+      const paneltitles = document.querySelectorAll('.paneltitle');
+      titles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+      subtitles.forEach(el => el.style.color = isDark ? '#9aa4b2' : '#222');
+      paneltitles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'light') setDarkMode(false);
+      else setDarkMode(true);
+      updateTitleSubtitleColors();
+      // Ensure toggle is synced
+      const toggle = document.getElementById('darkModeToggle');
+      if (toggle) {
+        toggle.addEventListener('change', function() {
+          setDarkMode(toggle.checked);
+        });
+      }
+    });
+  </script>
 </head>
 <body>
 <header class="app-header" role="banner" style="background: var(--accent); color: #fff; border-radius: 12px; padding: 16px 22px;">
@@ -217,6 +368,11 @@
         </svg>
         <input id="searchInput" type="search" placeholder="Zoeken..." aria-label="Zoeken" />
       </div>
+      <!-- Remove sun and moon icons from the toggle switch -->
+      <label class="toggle-switch" title="Toggle dark mode">
+        <input id="darkModeToggle" type="checkbox" />
+        <span class="slider"></span>
+      </label>
     </div>
   </header>
 
@@ -226,27 +382,27 @@
       <div class="grid" id="cardsGrid">
         <!-- switchconfig zonder VLAN -->
         <a class="card" href="./other_websites/switches_config.html" target="_blank" rel="noopener noreferrer">
-          <img src="./pictures/network-switch.svg" alt="Switches">
+          <img src="./pictures/network-switch.svg" alt="">
           <p class="title">switches config</p>
           <p class="subtitle"></p>
         </a>
 <!-- switchconfig MET VLAN -->
         <a class="card" href="./other_websites/switches_configVLANS.html" target="_blank" rel="noopener noreferrer">
-          <img src="./pictures/network-switch.svg" alt="Zabbix">
+          <img src="./pictures/network-switch.svg" alt="">
           <p class="title">VLAN switches config</p>
           <p class="subtitle"></p>
         </a>
-<!-- the pinging html -->
-        <a class="card" href="./other_websites/pinging.html" target="_blank" rel="noopener noreferrer">
-          <img src="./other_websites/pinging.html" alt="PRTG">
-          <p class="title">IP ping</p>
-          <p class="subtitle">pinging of IPV4 IP</p>
+
+        <a class="card" href="https://tools.radwin.com/updates/lk-radwin.htm" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/radwin logo.png" alt="">
+          <p class="title">radwin band upgrade</p>
+          <p class="subtitle"></p>
         </a>
 
-        <a class="card" href="https://freshdesk.com" target="_blank" rel="noopener noreferrer">
-          <img src="freshdesk.png" alt="Freshdesk">
-          <p class="title">Freshdesk</p>
-          <p class="subtitle">Tickets</p>
+        <a class="card" href="https://tools.radwin.com/updates/LicenseKey/lk-radwin.htm" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/radwin logo.png" alt="">
+          <p class="title">radwi license check</p>
+          <p class="subtitle"></p>
         </a>
 
         <a class="card" href="https://radwin.com" target="_blank" rel="noopener noreferrer">
@@ -302,13 +458,13 @@
 
     <!-- Right: panel -->
     <aside class="panel" aria-labelledby="panelTitle">
-      <h2 id="panelTitle">VPN's & korte links</h2>
+      <h2 id="panelTitle" class="paneltitle" style="color:#fff;">VPN's & korte links</h2>
 
       <div class="vpn-list" id="vpnList">
         <a class="vpn-link" href="https://vpn.example.com" target="_blank" rel="noopener noreferrer">
           <img src="gentvpn.png" alt="Gent VPN">
           <div>
-            <div style="font-weight:600">GENT VPN</div>
+            <div style="font-weight:600; color: #fff;" class="paneltitle">testing</div>
             <div style="font-size:12px;color:var(--muted)">Directe toegang</div>
           </div>
         </a>
@@ -356,6 +512,49 @@
         }
       });
     })();
+
+    // Dark mode toggle logic
+    function setDarkMode(enabled) {
+      const toggle = document.getElementById('darkModeToggle');
+      if (enabled) {
+        document.documentElement.classList.add('dark');
+        document.body.style.background = 'linear-gradient(180deg,#08101a 0%, var(--bg) 100%)';
+        localStorage.setItem('theme', 'dark');
+        if (toggle) toggle.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.style.background = '#f3f4f6';
+        localStorage.setItem('theme', 'light');
+        if (toggle) toggle.checked = false;
+      }
+      updateTitleSubtitleColors();
+    }
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(!isDark);
+    }
+    function updateTitleSubtitleColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const titles = document.querySelectorAll('.title');
+      const subtitles = document.querySelectorAll('.subtitle');
+      const paneltitles = document.querySelectorAll('.paneltitle');
+      titles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+      subtitles.forEach(el => el.style.color = isDark ? '#9aa4b2' : '#222');
+      paneltitles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'light') setDarkMode(false);
+      else setDarkMode(true);
+      updateTitleSubtitleColors();
+      // Ensure toggle is synced
+      const toggle = document.getElementById('darkModeToggle');
+      if (toggle) {
+        toggle.addEventListener('change', function() {
+          setDarkMode(toggle.checked);
+        });
+      }
+    });
   </script>
 </body>
 </html>

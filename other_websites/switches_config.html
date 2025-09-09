@@ -66,6 +66,9 @@
                 <input id="password" type="text" placeholder="Admin wachtwoord" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
                 <div id="password-error" class="text-red-500 text-sm mt-1 hidden">Admin wachtwoord is verplicht</div>
             </div>
+            <div>
+                <input id="vlan" type="number" placeholder="VLAN ID (optioneel)" min="1" max="4094" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+            </div>
             <input id="ntp" type="text" placeholder="NTP server (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
         </div>
         <button onclick="generateSingle()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Script</button>
@@ -98,6 +101,9 @@
             <div>
                 <input id="passwordMulti" type="text" placeholder="Admin wachtwoord" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
                 <div id="passwordMulti-error" class="text-red-500 text-sm mt-1 hidden">Admin wachtwoord is verplicht</div>
+            </div>
+            <div>
+                <input id="vlanMulti" type="number" placeholder="VLAN ID (optioneel)" min="1" max="4094" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
             </div>
             <input id="ntpMulti" type="text" placeholder="NTP server (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
             <div>
@@ -217,13 +223,14 @@
         }
     }
 
-    function generateScript(ip, subnet, gateway, hostname, password, ntp) {
-        let script = `configure
-
-interface vlan 1
-ip address ${ip} ${subnet} default-gateway ${gateway}
-exit
-
+    function generateScript(ip, subnet, gateway, hostname, password, ntp, vlan) {
+        let vlanConfig = "";
+        if (vlan) {
+            vlanConfig = `\nvlan database\nvlan ${vlan}\nexit\n\ninterface vlan ${vlan}\nip address ${ip} ${subnet} default-gateway ${gateway}\nexit\n`;
+        } else {
+            vlanConfig = `\ninterface vlan 1\nip address ${ip} ${subnet} default-gateway ${gateway}\nexit\n`;
+        }
+        let script = `configure${vlanConfig}
 hostname ${hostname}
 snmp-server contact RTS bvba
 username admin password 0 ${password}
@@ -235,13 +242,7 @@ ip ssh crypto host-key generate
 ip ssh save host-key
 configure
 ${ntp ? "ntp server " + ntp : ""}
-exit
-
-show version
-show ntp
-show ip ssh
-show system
-copy run start`;
+exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start`;
         return script;
     }
 
@@ -256,8 +257,9 @@ copy run start`;
         let hostname = document.getElementById("hostname").value.trim();
         let password = document.getElementById("password").value.trim();
         let ntp = document.getElementById("ntp").value.trim();
+        let vlan = document.getElementById("vlan").value.trim();
 
-        let script = generateScript(ip, subnet, gateway, hostname, password, ntp);
+        let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan);
         document.getElementById("singleScript").value = script;
         document.getElementById("singleResult").classList.remove("hidden");
     }
@@ -273,6 +275,7 @@ copy run start`;
         let startHostname = document.getElementById("startHostname").value.trim();
         let password = document.getElementById("passwordMulti").value.trim();
         let ntp = document.getElementById("ntpMulti").value.trim();
+        let vlan = document.getElementById("vlanMulti").value.trim();
         let count = parseInt(document.getElementById("count").value);
 
         let container = document.getElementById("multiResult");
@@ -285,7 +288,7 @@ copy run start`;
             let ip = ipParts.join(".");
             let hostname = generateHostname(startHostname, i);
 
-            let script = generateScript(ip, subnet, gateway, hostname, password, ntp);
+            let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan);
 
             let block = document.createElement("div");
             block.className = "p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 transition-colors duration-200";

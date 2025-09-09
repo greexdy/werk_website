@@ -66,7 +66,17 @@
                 <input id="password" type="text" placeholder="Admin wachtwoord" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
                 <div id="password-error" class="text-red-500 text-sm mt-1 hidden">Admin wachtwoord is verplicht</div>
             </div>
+            <div>
+                <input id="vlan" type="number" placeholder="VLAN ID (optioneel)" min="1" max="4094 class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+            </div>
             <input id="ntp" type="text" placeholder="NTP server (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <!-- VLAN name and ports for Single Switch Config -->
+        <div>
+            <input id="vlanName" type="text" placeholder="VLAN naam (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <div>
+            <input id="vlanPorts" type="text" placeholder="Poorten op deze VLAN (bv. 1,2,3)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
         </div>
         <button onclick="generateSingle()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Script</button>
         <div id="singleResult" class="hidden mt-4">
@@ -99,11 +109,21 @@
                 <input id="passwordMulti" type="text" placeholder="Admin wachtwoord" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
                 <div id="passwordMulti-error" class="text-red-500 text-sm mt-1 hidden">Admin wachtwoord is verplicht</div>
             </div>
+            <div>
+                <input id="vlanMulti" type="number" placeholder="VLAN ID (optioneel)" min="1" max="4094" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+            </div>
             <input id="ntpMulti" type="text" placeholder="NTP server (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
             <div>
                 <input id="count" type="number" placeholder="Aantal switches" min="1" class="p-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" required/>
                 <div id="count-error" class="text-red-500 text-sm mt-1 hidden">Aantal switches is verplicht</div>
             </div>
+        </div>
+        <!-- VLAN name and ports for Multi Switch Config -->
+        <div>
+            <input id="vlanNameMulti" type="text" placeholder="VLAN naam (optioneel)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+        </div>
+        <div>
+            <input id="vlanPortsMulti" type="text" placeholder="Poorten op deze VLAN (bv. 1,2,3)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
         </div>
         <button onclick="generateMulti()" class="bg-[#b81652] hover:bg-[#a01446] text-white px-4 py-2 rounded shadow transition-colors duration-200">Genereer Scripts</button>
         <div id="multiResult" class="hidden mt-4 space-y-4"></div>
@@ -217,13 +237,20 @@
         }
     }
 
-    function generateScript(ip, subnet, gateway, hostname, password, ntp) {
-        let script = `configure
-
-interface vlan 1
-ip address ${ip} ${subnet} default-gateway ${gateway}
-exit
-
+    function generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts) {
+        let vlanConfig = "";
+        if (vlan) {
+            vlanConfig = `\nvlan database\nvlan ${vlan}${vlanName ? ' name ' + vlanName : ''}\nexit\n\ninterface vlan ${vlan}\nip address ${ip} ${subnet} default-gateway ${gateway}\nexit\n`;
+            if (vlanPorts) {
+                const ports = vlanPorts.split(',').map(p => p.trim()).filter(Boolean);
+                ports.forEach(port => {
+                    vlanConfig += `interface ethernet 1/${port}\nswitchport access vlan ${vlan}\nexit\n`;
+                });
+            }
+        } else {
+            vlanConfig = `\ninterface vlan 1\nip address ${ip} ${subnet} default-gateway ${gateway}\nexit\n`;
+        }
+        let script = `configure${vlanConfig}
 hostname ${hostname}
 snmp-server contact RTS bvba
 username admin password 0 ${password}
@@ -235,13 +262,7 @@ ip ssh crypto host-key generate
 ip ssh save host-key
 configure
 ${ntp ? "ntp server " + ntp : ""}
-exit
-
-show version
-show ntp
-show ip ssh
-show system
-copy run start`;
+exit\n\nshow version\nshow ntp\nshow ip ssh\nshow system\ncopy run start`;
         return script;
     }
 
@@ -249,15 +270,16 @@ copy run start`;
         if (!validateSingleForm()) {
             return;
         }
-
         let ip = document.getElementById("ip").value.trim();
         let subnet = document.getElementById("subnet").value.trim();
         let gateway = document.getElementById("gateway").value.trim();
         let hostname = document.getElementById("hostname").value.trim();
         let password = document.getElementById("password").value.trim();
         let ntp = document.getElementById("ntp").value.trim();
-
-        let script = generateScript(ip, subnet, gateway, hostname, password, ntp);
+        let vlan = document.getElementById("vlan").value.trim();
+        let vlanName = document.getElementById("vlanName").value.trim();
+        let vlanPorts = document.getElementById("vlanPorts").value.trim();
+        let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts);
         document.getElementById("singleScript").value = script;
         document.getElementById("singleResult").classList.remove("hidden");
     }
@@ -266,27 +288,25 @@ copy run start`;
         if (!validateMultiForm()) {
             return;
         }
-
         let startIp = document.getElementById("startIp").value.trim().split(".");
         let subnet = document.getElementById("subnetMulti").value.trim();
         let gateway = document.getElementById("gatewayMulti").value.trim();
         let startHostname = document.getElementById("startHostname").value.trim();
         let password = document.getElementById("passwordMulti").value.trim();
         let ntp = document.getElementById("ntpMulti").value.trim();
+        let vlan = document.getElementById("vlanMulti").value.trim();
+        let vlanName = document.getElementById("vlanNameMulti").value.trim();
+        let vlanPorts = document.getElementById("vlanPortsMulti").value.trim();
         let count = parseInt(document.getElementById("count").value);
-
         let container = document.getElementById("multiResult");
         container.innerHTML = "";
         container.classList.remove("hidden");
-
         for (let i = 0; i < count; i++) {
             let ipParts = [...startIp];
             ipParts[3] = parseInt(ipParts[3]) + i;
             let ip = ipParts.join(".");
             let hostname = generateHostname(startHostname, i);
-
-            let script = generateScript(ip, subnet, gateway, hostname, password, ntp);
-
+            let script = generateScript(ip, subnet, gateway, hostname, password, ntp, vlan, vlanName, vlanPorts);
             let block = document.createElement("div");
             block.className = "p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 transition-colors duration-200";
             block.innerHTML = `

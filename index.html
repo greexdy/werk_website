@@ -1,11 +1,570 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="Main_Site.html">
-  <title>Redirecting...</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RTS Links Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="./pictures/RTS_LOGO.svg">
+
+  <!-- Optional: change or remove the font link if your environment can't fetch Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0f1720;
+      --panel:#0f1728;
+      --muted:#9aa4b2;
+      --accent:#e63946;
+      --glass: rgba(255,255,255,0.03);
+      --card-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      --radius:12px;
+      --gap:18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#08101a 0%, var(--bg) 100%);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    /* Header */
+    header.app-header{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:22px;
+    }
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .brand img{
+      height:40px;
+      width:auto;
+      display:block;
+    }
+    .brand h1{
+      font-size:18px;
+      margin:0;
+      letter-spacing:1px;
+      color:var(--accent);
+      font-weight:700;
+      text-transform:uppercase;
+    }
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    /* Search */
+    .search {
+      position:relative;
+      display:flex;
+      align-items:center;
+    }
+    .search input{
+      width:260px;
+      padding:10px 14px 10px 40px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:var(--glass);
+      color:inherit;
+      outline: none;
+      font-size:14px;
+      transition:box-shadow .18s, transform .12s;
+    }
+    .search input:focus{
+      box-shadow: 0 6px 18px rgba(14, 67, 120, 0.25);
+      transform:translateY(-1px);
+      border-color: rgba(255,255,255,0.08);
+    }
+    .search svg {
+      position:absolute;
+      left:12px;
+      width:18px;
+      height:18px;
+      opacity:0.85;
+    }
+
+    /* Layout */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap:var(--gap);
+      align-items:start;
+    }
+
+    /* Cards grid */
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap:var(--gap);
+    }
+
+    .card {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:18px;
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: var(--card-shadow);
+      text-decoration:none;
+      color:inherit;
+      transition: transform .18s ease, box-shadow .18s ease;
+      min-height:120px;
+      justify-content:center;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .card:hover, .card:focus {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 40px rgba(2,6,23,0.7);
+    }
+
+    .card img {
+      height:48px;
+      width:48px;
+      object-fit:contain;
+      display:block;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45));
+    }
+    .card .title {
+      margin:0;
+      font-size:13px;
+      font-weight:600;
+      color:#e6eef6;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+    .card .subtitle{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Right column / sections */
+    aside.panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      border-radius:var(--radius);
+      padding:16px;
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: var(--card-shadow);
+      min-height:160px;
+    }
+    aside h2{margin:6px 0 14px 0;font-size:14px}
+    .vpn-list {display:flex;flex-direction:column;gap:10px}
+    .vpn-link{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:10px;
+      border-radius:10px;
+      text-decoration:none;
+      color:inherit;
+      background:rgba(255,255,255,0.015);
+      border:1px solid rgba(255,255,255,0.02);
+      transition:transform .12s, background .12s;
+    }
+    .vpn-link img{height:40px;width:40px;object-fit:contain}
+    .vpn-link:hover{transform:translateY(-4px); background: rgba(255,255,255,0.02)}
+
+    /* Empty state */
+    .empty {
+      padding:24px;
+      border-radius:10px;
+      text-align:center;
+      color:var(--muted);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border:1px dashed rgba(255,255,255,0.02);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 54px;
+      height: 28px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #fff;
+      border-radius: 34px;
+      transition: background 0.3s;
+      border: 1.5px solid #bbb;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 2.5px;
+      background-color: #222;
+      border-radius: 50%;
+      transition: transform 0.3s, background 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    input:checked + .slider {
+      background-color: #222;
+      border-color: #222;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+      background: #fff;
+    }
+
+    /* Responsive */
+    @media (max-width:900px){
+      main{grid-template-columns:1fr}
+      .search input{width:180px}
+      body{padding:18px}
+    }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1720;
+        --panel: #0f1728;
+        --muted: #9aa4b2;
+        --accent: #e63946;
+        --glass: rgba(255, 255, 255, 0.03);
+        --card-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+      }
+      body {
+        background: linear-gradient(180deg, #08101a 0%, var(--bg) 100%);
+        color: #e6eef6;
+      }
+      .app-header {
+        background: var(--accent);
+        color: #fff;
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .vpn-link {
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+      .empty {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+        border: 1px dashed rgba(255, 255, 255, 0.02);
+      }
+    }
+  </style>
+  <script>
+    // Simple client-side filter: filters cards by title/subtitle text
+    (function(){
+      const input = document.getElementById('searchInput');
+      const grid = document.getElementById('cardsGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const hint = document.getElementById('searchHint');
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+          const title = (card.querySelector('.title')?.textContent || '').toLowerCase();
+          const subtitle = (card.querySelector('.subtitle')?.textContent || '').toLowerCase();
+          const matches = q === '' || title.includes(q) || subtitle.includes(q) || card.href.toLowerCase().includes(q);
+          card.style.display = matches ? '' : 'none';
+          if(matches) visible++;
+        });
+
+        // show helpful hint if no cards match
+        hint.textContent = visible === 0 ? 'Geen resultaten gevonden. Probeer een ander zoekwoord.' : 'Gebruik de zoekbalk bovenaan om snel te filteren op naam (bv. "zabbix", "milestone").';
+      });
+
+      // Allow pressing / to focus the search quickly
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          input.focus();
+        }
+      });
+    })();
+
+    // Dark mode toggle logic
+    function setDarkMode(enabled) {
+      const toggle = document.getElementById('darkModeToggle');
+      if (enabled) {
+        document.documentElement.classList.add('dark');
+        document.body.style.background = 'linear-gradient(180deg,#08101a 0%, var(--bg) 100%)';
+        localStorage.setItem('theme', 'dark');
+        if (toggle) toggle.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.style.background = '#f3f4f6';
+        localStorage.setItem('theme', 'light');
+        if (toggle) toggle.checked = false;
+      }
+      updateTitleSubtitleColors();
+    }
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(!isDark);
+    }
+    function updateTitleSubtitleColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const titles = document.querySelectorAll('.title');
+      const subtitles = document.querySelectorAll('.subtitle');
+      const paneltitles = document.querySelectorAll('.paneltitle');
+      titles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+      subtitles.forEach(el => el.style.color = isDark ? '#9aa4b2' : '#222');
+      paneltitles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'light') setDarkMode(false);
+      else setDarkMode(true);
+      updateTitleSubtitleColors();
+      // Ensure toggle is synced
+      const toggle = document.getElementById('darkModeToggle');
+      if (toggle) {
+        toggle.addEventListener('change', function() {
+          setDarkMode(toggle.checked);
+        });
+      }
+    });
+  </script>
 </head>
 <body>
-  <p>If you are not redirected automatically, <a href="Main_Site.html">click here</a>.</p>
+<header class="app-header" role="banner" style="background: var(--accent); color: #fff; border-radius: 12px; padding: 16px 22px;">
+    <div class="brand">
+        <!-- Replace with your vector logo -->
+        <img src="./pictures/RTS_LOGO.svg" alt="RTS Logo" onerror="this.style.display='none'">
+        <div>
+            <h1 style="color: #fff;">RTS Werk Dash</h1>
+            <div style="font-size:12px;color:#fff;">tools en links om snel dingen te kunnen configureren</div>
+        </div>
+    </div>
+
+    <div class="controls" role="search">
+      <div class="search" aria-label="Zoeken in links">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        <input id="searchInput" type="search" placeholder="Zoeken..." aria-label="Zoeken" />
+      </div>
+      <!-- Remove sun and moon icons from the toggle switch -->
+      <label class="toggle-switch" title="Toggle dark mode">
+        <input id="darkModeToggle" type="checkbox" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left: grid -->
+    <section aria-label="Snelkoppelingen">
+      <div class="grid" id="cardsGrid">
+        <!-- switchconfig zonder VLAN -->
+        <a class="card" href="./other_websites/switches_config.html" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/network-switch.svg" alt="">
+          <p class="title">switches config</p>
+          <p class="subtitle"></p>
+        </a>
+<!-- switchconfig MET VLAN -->
+        <a class="card" href="./other_websites/switches_configVLANS.html" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/network-switch.svg" alt="">
+          <p class="title">VLAN switches config</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://tools.radwin.com/updates/lk-radwin.htm" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/radwin logo.png" alt="">
+          <p class="title">radwin band upgrade</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://tools.radwin.com/updates/LicenseKey/lk-radwin.htm" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/radwin logo.png" alt="">
+          <p class="title">radwi license check</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+       <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+        <a class="card" href="https://rts.be" target="_blank" rel="noopener noreferrer">
+          <img src="./pictures/tijdelijk_object.svg" alt="Gitea">
+          <p class="title">RTS place holder</p>
+          <p class="subtitle"></p>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Right: panel -->
+    <aside class="panel" aria-labelledby="panelTitle">
+      <h2 id="panelTitle" class="paneltitle" style="color:#fff;">VPN's & korte links</h2>
+
+      <div class="vpn-list" id="vpnList">
+        <a class="vpn-link" href="https://vpn.example.com" target="_blank" rel="noopener noreferrer">
+          <img src="gentvpn.png" alt="Gent VPN">
+          <div>
+            <div style="font-weight:600; color: #fff;" class="paneltitle">testing</div>
+            <div style="font-size:12px;color:var(--muted)">Directe toegang</div>
+          </div>
+        </a>
+
+        <!-- Add more VPN links as needed -->
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="empty" id="searchHint">
+        Gebruik de zoekbalk bovenaan om snel te filteren op naam (bv. "zabbix", "milestone").
+      </div>
+
+      <a class="weatherwidget-io" href="https://forecast7.com/nl/50d852d88/ypres/" data-label_1="IEPER" data-label_2="WEATHER" data-days="3" data-theme="weather_one" >IEPER WEATHER</a>
+    </aside>
+  </main>
+
+  <script>
+    // Simple client-side filter: filters cards by title/subtitle text
+    (function(){
+      const input = document.getElementById('searchInput');
+      const grid = document.getElementById('cardsGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const hint = document.getElementById('searchHint');
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+          const title = (card.querySelector('.title')?.textContent || '').toLowerCase();
+          const subtitle = (card.querySelector('.subtitle')?.textContent || '').toLowerCase();
+          const matches = q === '' || title.includes(q) || subtitle.includes(q) || card.href.toLowerCase().includes(q);
+          card.style.display = matches ? '' : 'none';
+          if(matches) visible++;
+        });
+
+        // show helpful hint if no cards match
+        hint.textContent = visible === 0 ? 'Geen resultaten gevonden. Probeer een ander zoekwoord.' : 'Gebruik de zoekbalk bovenaan om snel te filteren op naam (bv. "zabbix", "milestone").';
+      });
+
+      // Allow pressing / to focus the search quickly
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          input.focus();
+        }
+      });
+    })();
+
+    // Dark mode toggle logic
+    function setDarkMode(enabled) {
+      const toggle = document.getElementById('darkModeToggle');
+      if (enabled) {
+        document.documentElement.classList.add('dark');
+        document.body.style.background = 'linear-gradient(180deg,#08101a 0%, var(--bg) 100%)';
+        localStorage.setItem('theme', 'dark');
+        if (toggle) toggle.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.style.background = '#f3f4f6';
+        localStorage.setItem('theme', 'light');
+        if (toggle) toggle.checked = false;
+      }
+      updateTitleSubtitleColors();
+    }
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(!isDark);
+    }
+    function updateTitleSubtitleColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const titles = document.querySelectorAll('.title');
+      const subtitles = document.querySelectorAll('.subtitle');
+      const paneltitles = document.querySelectorAll('.paneltitle');
+      titles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+      subtitles.forEach(el => el.style.color = isDark ? '#9aa4b2' : '#222');
+      paneltitles.forEach(el => el.style.color = isDark ? '#e6eef6' : '#222');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'light') setDarkMode(false);
+      else setDarkMode(true);
+      updateTitleSubtitleColors();
+      // Ensure toggle is synced
+      const toggle = document.getElementById('darkModeToggle');
+      if (toggle) {
+        toggle.addEventListener('change', function() {
+          setDarkMode(toggle.checked);
+        });
+      }
+    });
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+  </script>
 </body>
 </html>

@@ -274,6 +274,31 @@
     }
   </style>
   <script>
+    // Simple login logic
+    document.addEventListener('DOMContentLoaded', function() {
+      const overlay = document.getElementById('loginOverlay');
+      const form = document.getElementById('loginForm');
+      const passwordInput = document.getElementById('loginPassword');
+      const errorMsg = document.getElementById('loginError');
+      // Change this password as needed
+      const CORRECT_PASSWORD = 'rts2025';
+      // Hide main content until login
+      document.body.style.overflow = 'hidden';
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if(passwordInput.value === CORRECT_PASSWORD) {
+          overlay.style.display = 'none';
+          document.body.style.overflow = '';
+        } else {
+          errorMsg.style.display = 'block';
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      });
+      passwordInput.addEventListener('input', function() {
+        errorMsg.style.display = 'none';
+      });
+    });
     // Simple client-side filter: filters cards by title/subtitle text
     (function(){
       const input = document.getElementById('searchInput');
@@ -351,6 +376,15 @@
   </script>
 </head>
 <body>
+<div id="loginOverlay" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,32,0.98);display:flex;align-items:center;justify-content:center;">
+  <form id="loginForm" style="background:var(--panel);padding:36px 32px 28px 32px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.45);display:flex;flex-direction:column;gap:18px;min-width:320px;">
+    <img src="./pictures/RTS_LOGO.svg" alt="Logo" style="height:48px;width:auto;margin:0 auto 8px auto;display:block;">
+    <h2 style="margin:0 0 8px 0;text-align:center;color:var(--accent);font-size:20px;">Login vereist</h2>
+    <input id="loginPassword" type="password" placeholder="Wachtwoord" style="padding:12px 14px;border-radius:8px;border:1px solid #222;font-size:16px;outline:none;" required autofocus>
+    <button type="submit" style="padding:12px 0;border-radius:8px;background:var(--accent);color:#fff;font-weight:600;font-size:16px;border:none;cursor:pointer;">Inloggen</button>
+    <div id="loginError" style="color:#e63946;text-align:center;display:none;font-size:14px;">Fout wachtwoord, probeer opnieuw.</div>
+  </form>
+</div>
 <header class="app-header" role="banner" style="background: var(--accent); color: #fff; border-radius: 12px; padding: 16px 22px;">
     <div class="brand">
         <!-- Replace with your vector logo -->

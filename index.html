@@ -274,19 +274,25 @@
     }
   </style>
   <script>
-    // Simple login logic
+    // Login logic using SHA-256 hash comparison
     document.addEventListener('DOMContentLoaded', function() {
       const overlay = document.getElementById('loginOverlay');
       const form = document.getElementById('loginForm');
       const passwordInput = document.getElementById('loginPassword');
       const errorMsg = document.getElementById('loginError');
-      // Change this password as needed
-      const CORRECT_PASSWORD = 'rts2025';
-      // Hide main content until login
+      // SHA-256 hash for password 'rts2025' (change this if you change the password)
+  const CORRECT_HASH = 'bed2ac2f1bfc9fa4abc59325a9021cf739425faeee2a58bc3adc6b85a5e83ce5'; // sha256('rts2025')
       document.body.style.overflow = 'hidden';
-      form.addEventListener('submit', function(e) {
+
+      async function sha256(str) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        if(passwordInput.value === CORRECT_PASSWORD) {
+        const inputHash = await sha256(passwordInput.value);
+        if(inputHash === CORRECT_HASH) {
           overlay.style.display = 'none';
           document.body.style.overflow = '';
         } else {

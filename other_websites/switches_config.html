@@ -185,7 +185,6 @@
         let isValid = true;
         isValid &= validateField('ip', 'ip-error', 'IP adres');
         isValid &= validateField('subnet', 'subnet-error', 'Subnet mask');
-        isValid &= validateField('gateway', 'gateway-error', 'Default Gateway');
         isValid &= validateField('hostname', 'hostname-error', 'Hostname');
         isValid &= validateField('password', 'password-error', 'Admin wachtwoord');
         return isValid;
@@ -195,7 +194,6 @@
         let isValid = true;
         isValid &= validateField('startIp', 'startIp-error', 'Start IP adres');
         isValid &= validateField('subnetMulti', 'subnetMulti-error', 'Subnet mask');
-        isValid &= validateField('gatewayMulti', 'gatewayMulti-error', 'Default Gateway');
         isValid &= validateField('startHostname', 'startHostname-error', 'Start Hostname');
         isValid &= validateField('passwordMulti', 'passwordMulti-error', 'Admin wachtwoord');
         isValid &= validateField('count', 'count-error', 'Aantal switches');
@@ -221,7 +219,7 @@
         let script = `configure
 
 interface vlan 1
-ip address ${ip} ${subnet} default-gateway ${gateway}
+ip address ${ip} ${subnet} ${gateway}
 exit
 
 hostname ${hostname}
@@ -256,6 +254,12 @@ copy run start
         let ip = document.getElementById("ip").value.trim();
         let subnet = document.getElementById("subnet").value.trim();
         let gateway = document.getElementById("gateway").value.trim();
+        if (gateway == "") {
+
+        } else {
+            gateway = "default-gateway " + document.getElementById("gateway").value.trim();
+        }
+
         let hostname = document.getElementById("hostname").value.trim();
         let password = document.getElementById("password").value.trim();
         let ntp = document.getElementById("ntp").value.trim();
@@ -273,6 +277,13 @@ copy run start
         let startIp = document.getElementById("startIp").value.trim().split(".");
         let subnet = document.getElementById("subnetMulti").value.trim();
         let gateway = document.getElementById("gatewayMulti").value.trim();
+        if (gateway == "") {
+
+        } else {
+            gateway = "default-gateway " + document.getElementById("gatewayMulti").value.trim();
+
+        }
+
         let startHostname = document.getElementById("startHostname").value.trim();
         let password = document.getElementById("passwordMulti").value.trim();
         let ntp = document.getElementById("ntpMulti").value.trim();
